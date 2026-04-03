@@ -3,93 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>GameRef — игры с рефералами</title>
+    <title>Premium GameHub — Ваш центр игр</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="app-container">
+    <div class="app">
         <!-- Главный экран с выбором игры -->
-        <div id="home-screen" class="screen active">
-            <div class="header">
-                <h1>🎮 GameRef</h1>
-                <p>Выбери игру и приглашай друзей</p>
+        <div id="home" class="screen active">
+            <div class="hero">
+                <div class="glow"></div>
+                <h1>Game<span>Hub</span></h1>
+                <p>Играй и приглашай друзей</p>
             </div>
-            <div class="games-grid">
-                <div class="game-card" data-game="pixelworld">
-                    <div class="game-icon pixel-icon">🟦</div>
+            <div class="cards">
+                <div class="game-card" data-game="pixel">
+                    <div class="card-glow"></div>
+                    <div class="card-icon">🌌</div>
                     <h2>PixelWorld</h2>
-                    <p>Кликер с пиксельной атмосферой</p>
-                    <div class="card-footer">
-                        <span class="click-count" id="pixel-preview-count">0</span> кликов
+                    <p>Кликер с космической атмосферой</p>
+                    <div class="stats">
+                        <span>🏆 очки</span>
+                        <strong id="preview-pixel">0</strong>
                     </div>
+                    <div class="card-btn">Играть →</div>
                 </div>
                 <div class="game-card" data-game="hamster">
-                    <div class="game-icon hamster-icon">🐹</div>
+                    <div class="card-glow"></div>
+                    <div class="card-icon">🐹</div>
                     <h2>Hamster Kombat</h2>
                     <p>Стань хомячьим магнатом</p>
-                    <div class="card-footer">
-                        <span class="click-count" id="hamster-preview-count">0</span> кликов
+                    <div class="stats">
+                        <span>🌻 семечки</span>
+                        <strong id="preview-hamster">0</strong>
                     </div>
+                    <div class="card-btn">Играть →</div>
                 </div>
             </div>
-            <div class="info-note">
-                <span>✨ Нажимай на игрушку — зарабатывай очки</span><br>
-                <span>🤝 Приглашай друзей по уникальной ссылке</span>
+            <div class="footer-note">
+                <span>🔥 Нажимай на центр — зарабатывай очки</span><br>
+                <span>🤝 Пригласи друга по ссылке внутри игры</span>
             </div>
         </div>
 
-        <!-- Экран игры PixelWorld -->
-        <div id="pixelworld-screen" class="screen">
+        <!-- Игровой экран PixelWorld -->
+        <div id="pixel" class="screen">
             <div class="game-header">
-                <button class="back-btn" data-back>← Назад</button>
+                <button class="back-btn">← Назад</button>
                 <h2>PixelWorld</h2>
-                <div class="placeholder"></div>
+                <div></div>
             </div>
-            <div class="game-content">
-                <div class="score-box">
-                    <span class="score-label">💰 Очки</span>
-                    <span class="score-value" id="pixel-score">0</span>
+            <div class="game-area">
+                <div class="score-panel">
+                    <span class="score-label">💰 ТВОИ ОЧКИ</span>
+                    <span class="score-value" id="score-pixel">0</span>
                 </div>
-                <div class="click-zone" id="pixel-click-zone">
-                    <div class="click-emoji">🟦</div>
-                    <div class="click-hint">ТАПАЙ СЮДА!</div>
+                <div class="click-orb" id="click-pixel">
+                    <div class="orb-inner">🟦</div>
+                    <div class="tap-hint">ТАП</div>
                 </div>
-                <div class="ref-section">
-                    <button class="ref-btn" id="pixel-ref-btn">🤝 Пригласить друга</button>
-                    <div class="ref-link-container">
-                        <input type="text" id="pixel-ref-link" readonly value="https://t.me/pixelworld/play?startapp=r6823288584">
-                        <button class="copy-btn" data-copy="pixel-ref-link">📋</button>
+                <div class="referral-block">
+                    <button class="ref-main-btn" id="ref-pixel-btn">🤝 Пригласить друга в PixelWorld</button>
+                    <div class="link-copy">
+                        <input type="text" id="ref-link-pixel" readonly value="https://t.me/pixelworld/play?startapp=r6823288584">
+                        <button class="copy-btn" data-copy="ref-link-pixel">📋 Копировать</button>
                     </div>
-                    <small>Пригласи друга — получи бонус в игре!</small>
+                    <small>По вашей ссылке — друзьям бонус, вам реферальные очки!</small>
                 </div>
             </div>
         </div>
 
-        <!-- Экран игры Hamster Kombat -->
-        <div id="hamster-screen" class="screen">
+        <!-- Игровой экран Hamster Kombat -->
+        <div id="hamster" class="screen">
             <div class="game-header">
-                <button class="back-btn" data-back>← Назад</button>
+                <button class="back-btn">← Назад</button>
                 <h2>Hamster Kombat</h2>
-                <div class="placeholder"></div>
+                <div></div>
             </div>
-            <div class="game-content">
-                <div class="score-box">
-                    <span class="score-label">🌻 Семечки</span>
-                    <span class="score-value" id="hamster-score">0</span>
+            <div class="game-area">
+                <div class="score-panel">
+                    <span class="score-label">🌻 СЕМЕЧКИ</span>
+                    <span class="score-value" id="score-hamster">0</span>
                 </div>
-                <div class="click-zone" id="hamster-click-zone">
-                    <div class="click-emoji">🐹</div>
-                    <div class="click-hint">ТАПАЙ ПО ХОМЯКУ!</div>
+                <div class="click-orb" id="click-hamster">
+                    <div class="orb-inner">🐹</div>
+                    <div class="tap-hint">ТАП</div>
                 </div>
-                <div class="ref-section">
-                    <button class="ref-btn" id="hamster-ref-btn">🤝 Пригласить друга</button>
-                    <div class="ref-link-container">
-                        <input type="text" id="hamster-ref-link" readonly value="https://t.me/Hamster_GAme_Dev_bot/start?startapp=kentId6823288584">
-                        <button class="copy-btn" data-copy="hamster-ref-link">📋</button>
+                <div class="referral-block">
+                    <button class="ref-main-btn" id="ref-hamster-btn">🤝 Пригласить друга в Hamster Kombat</button>
+                    <div class="link-copy">
+                        <input type="text" id="ref-link-hamster" readonly value="https://t.me/Hamster_GAme_Dev_bot/start?startapp=kentId6823288584">
+                        <button class="copy-btn" data-copy="ref-link-hamster">📋 Копировать</button>
                     </div>
-                    <small>Пригласи друга — получи бонус в игре!</small>
+                    <small>Ваша реферальная ссылка — зовите друзей и получайте бонусы!</small>
                 </div>
             </div>
         </div>
