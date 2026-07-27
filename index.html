@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepSeek Chat</title>
+    <title>DeepSeek Chat + Проверка баланса</title>
     <style>
         * {
             margin: 0;
@@ -33,7 +33,7 @@
 
         h1 {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             color: #00d4ff;
             font-size: 28px;
         }
@@ -41,16 +41,72 @@
         .subtitle {
             text-align: center;
             color: #888;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             font-size: 14px;
+        }
+
+        .balance-info {
+            background: #0f3460;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #00d4ff33;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .balance-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #00ff8822;
+            color: #00ff88;
+            border: 1px solid #00ff8844;
+        }
+
+        .status-empty {
+            background: #ff444422;
+            color: #ff6b6b;
+            border: 1px solid #ff444444;
+        }
+
+        .check-btn {
+            padding: 8px 16px;
+            background: #533483;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: opacity 0.2s;
+        }
+
+        .check-btn:hover {
+            opacity: 0.8;
         }
 
         .chat-box {
             background: #0f3460;
             border-radius: 12px;
             padding: 20px;
-            min-height: 300px;
-            max-height: 400px;
+            min-height: 250px;
+            max-height: 350px;
             overflow-y: auto;
             margin-bottom: 20px;
             border: 1px solid #00d4ff33;
@@ -156,20 +212,43 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
+
+        .info {
+            background: #00d4ff22;
+            border: 1px solid #00d4ff44;
+            color: #00d4ff;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🤖 DeepSeek Chat</h1>
-        <p class="subtitle">Чат-бот на основе DeepSeek API</p>
+        <p class="subtitle">Чат-бот с проверкой баланса</p>
         
-        <div class="warning">
-            ⚠️ ВАЖНО: Замените API_KEY в коде на свой ключ с <a href="https://platform.deepseek.com" target="_blank" style="color: #ffaa00;">platform.deepseek.com</a>
+        <div class="warning" id="apiWarning" style="display: none;">
+            ⚠️ Замените API_KEY в коде на свой ключ с platform.deepseek.com
+        </div>
+
+        <div class="balance-info">
+            <div>
+                <div class="balance-label">💰 Баланс</div>
+                <div class="balance-value" id="balanceDisplay">--</div>
+            </div>
+            <div>
+                <div class="balance-label">📊 Статус</div>
+                <span class="status-badge" id="statusBadge">Не проверен</span>
+            </div>
+            <button class="check-btn" onclick="checkBalance()">🔄 Проверить</button>
         </div>
         
         <div class="chat-box" id="chatBox">
             <div class="message bot-message">
-                👋 Привет! Я DeepSeek. Задайте мне любой вопрос.
+                👋 Привет! Нажмите "Проверить" чтобы узнать баланс API.
             </div>
         </div>
         
@@ -185,13 +264,114 @@
     </div>
 
     <script>
-        // ⚠️ ЗАМЕНИТЕ ЭТОТ КЛЮЧ НА СВОЙ: https://platform.deepseek.com
+        // ⚠️ ЗАМЕНИТЕ НА СВОЙ КЛЮЧ
         const API_KEY = "sk-a93f7e9c40e0484fa2446dae50690145";
         const API_URL = "https://api.deepseek.com/v1/chat/completions";
 
         const chatBox = document.getElementById('chatBox');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const statusBadge = document.getElementById('statusBadge');
+        const apiWarning = document.getElementById('apiWarning');
+
+        // Проверяем, заменён ли ключ
+        if (API_KEY === "sk-ваш-ключ-здесь") {
+            apiWarning.style.display = 'block';
+        }
+
+        // Автопроверка баланса при загрузке
+        window.onload = () => {
+            if (API_KEY !== "sk-ваш-ключ-здесь") {
+                checkBalance();
+            }
+        };
+
+        async function checkBalance() {
+            if (API_KEY === "sk-ваш-ключ-здесь") {
+                addMessage("❌ Сначала замените API_KEY в коде!", 'error');
+                return;
+            }
+
+            balanceDisplay.textContent = '...';
+            statusBadge.textContent = 'Проверка...';
+            statusBadge.className = 'status-badge';
+
+            try {
+                // DeepSeek не имеет прямого эндпоинта баланса,
+                // поэтому делаем тестовый запрос с минимальными токенами
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "user", content: "тест" }
+                        ],
+                        max_tokens: 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    balanceDisplay.textContent = '✅ Активен';
+                    balanceDisplay.style.color = '#00ff88';
+                    statusBadge.textContent = 'Работает';
+                    statusBadge.className = 'status-badge status-active';
+                    
+                    if (data.usage) {
+                        addMessage(`✅ API работает! Использовано токенов: ${data.usage.total_tokens}`, 'info');
+                    }
+                } else {
+                    const errorMsg = data.error?.message || '';
+                    
+                    if (errorMsg.includes('Insufficient') || 
+                        errorMsg.includes('quota') || 
+                        errorMsg.includes('balance') ||
+                        errorMsg.includes('billing') ||
+                        errorMsg.includes('402') ||
+                        response.status === 402) {
+                        
+                        balanceDisplay.textContent = '$0.00';
+                        balanceDisplay.style.color = '#ff6b6b';
+                        statusBadge.textContent = 'Пусто';
+                        statusBadge.className = 'status-badge status-empty';
+                        
+                        addMessage(
+                            '❌ <b>Бесплатные кредиты закончились!</b><br>' +
+                            '• Пополните баланс на <a href="https://platform.deepseek.com" target="_blank" style="color:#00d4ff;">platform.deepseek.com</a><br>' +
+                            '• Или создайте новый аккаунт для получения 10$ кредитов',
+                            'error'
+                        );
+                    } else if (errorMsg.includes('auth') || errorMsg.includes('key') || response.status === 401) {
+                        balanceDisplay.textContent = 'Ошибка';
+                        balanceDisplay.style.color = '#ff6b6b';
+                        statusBadge.textContent = 'Неверный ключ';
+                        statusBadge.className = 'status-badge status-empty';
+                        
+                        addMessage('❌ Неверный API ключ! Проверьте ключ и попробуйте снова.', 'error');
+                    } else {
+                        balanceDisplay.textContent = 'Ошибка';
+                        balanceDisplay.style.color = '#ffaa00';
+                        statusBadge.textContent = 'Ошибка';
+                        statusBadge.className = 'status-badge';
+                        
+                        addMessage(`⚠️ Ошибка: ${errorMsg || 'Неизвестная ошибка'}`, 'error');
+                    }
+                }
+            } catch (error) {
+                balanceDisplay.textContent = 'Ошибка';
+                balanceDisplay.style.color = '#ff6b6b';
+                statusBadge.textContent = 'Нет связи';
+                statusBadge.className = 'status-badge status-empty';
+                
+                addMessage(`❌ Ошибка соединения: ${error.message}`, 'error');
+            }
+        }
 
         async function sendMessage() {
             const message = userInput.value.trim();
@@ -199,15 +379,13 @@
             if (!message) return;
             
             if (API_KEY === "sk-ваш-ключ-здесь") {
-                addMessage("❌ Ошибка: Сначала замените API_KEY в коде на реальный ключ!", 'error');
+                addMessage("❌ Сначала замените API_KEY в коде!", 'error');
                 return;
             }
 
-            // Добавляем сообщение пользователя
             addMessage(message, 'user');
             userInput.value = '';
             
-            // Показываем загрузку
             sendBtn.disabled = true;
             const loadingMsg = addMessage('<span class="loading"></span> Думаю...', 'bot', true);
             
@@ -221,10 +399,6 @@
                     body: JSON.stringify({
                         model: "deepseek-chat",
                         messages: [
-                            { 
-                                role: "system", 
-                                content: "Ты полезный ассистент. Отвечай на русском языке кратко и по делу." 
-                            },
                             { role: "user", content: message }
                         ],
                         max_tokens: 1000,
@@ -233,21 +407,26 @@
                 });
 
                 const data = await response.json();
-                
-                // Удаляем сообщение загрузки
                 loadingMsg.remove();
                 
                 if (response.ok && data.choices) {
-                    const botReply = data.choices[0].message.content;
-                    addMessage(botReply, 'bot');
+                    addMessage(data.choices[0].message.content, 'bot');
+                } else if (response.status === 402 || 
+                          (data.error?.message && 
+                           (data.error.message.includes('Insufficient') || 
+                            data.error.message.includes('quota') || 
+                            data.error.message.includes('balance')))) {
+                    addMessage('❌ Бесплатные кредиты закончились! Пополните баланс на platform.deepseek.com', 'error');
+                    balanceDisplay.textContent = '$0.00';
+                    balanceDisplay.style.color = '#ff6b6b';
+                    statusBadge.textContent = 'Пусто';
+                    statusBadge.className = 'status-badge status-empty';
                 } else {
-                    const errorMsg = data.error?.message || 'Неизвестная ошибка';
-                    addMessage(`❌ Ошибка API: ${errorMsg}`, 'error');
+                    addMessage(`❌ Ошибка: ${data.error?.message || 'Неизвестная ошибка'}`, 'error');
                 }
-                
             } catch (error) {
                 loadingMsg.remove();
-                addMessage(`❌ Ошибка соединения: ${error.message}`, 'error');
+                addMessage(`❌ Ошибка: ${error.message}`, 'error');
             } finally {
                 sendBtn.disabled = false;
                 userInput.focus();
@@ -261,9 +440,7 @@
             chatBox.appendChild(messageDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
             
-            if (isTemp) {
-                return messageDiv;
-            }
+            if (isTemp) return messageDiv;
         }
     </script>
 </body>
