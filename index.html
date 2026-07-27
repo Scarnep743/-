@@ -276,19 +276,19 @@
         const apiWarning = document.getElementById('apiWarning');
 
         // Проверяем, заменён ли ключ
-        if (API_KEY === "sk-ваш-ключ-здесь") {
+        if (API_KEY === "sk-a93f7e9c40e0484fa2446dae50690145") {
             apiWarning.style.display = 'block';
         }
 
         // Автопроверка баланса при загрузке
         window.onload = () => {
-            if (API_KEY !== "sk-ваш-ключ-здесь") {
+            if (API_KEY !== "sk-a93f7e9c40e0484fa2446dae50690145") {
                 checkBalance();
             }
         };
 
         async function checkBalance() {
-            if (API_KEY === "sk-ваш-ключ-здесь") {
+            if (API_KEY === "sk-a93f7e9c40e0484fa2446dae50690145") {
                 addMessage("❌ Сначала замените API_KEY в коде!", 'error');
                 return;
             }
