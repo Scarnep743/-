@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepSeek Chat + Проверка баланса</title>
+    <title>OpenRouter Chat - DeepSeek</title>
     <style>
         * {
             margin: 0;
@@ -45,68 +45,40 @@
             font-size: 14px;
         }
 
-        .balance-info {
+        .model-selector {
             background: #0f3460;
             border-radius: 10px;
-            padding: 15px;
+            padding: 12px 15px;
             margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             border: 1px solid #00d4ff33;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .balance-label {
-            font-size: 14px;
+        .model-selector label {
             color: #888;
+            font-size: 14px;
+            white-space: nowrap;
         }
 
-        .balance-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #00d4ff;
-        }
-
-        .status-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .status-active {
-            background: #00ff8822;
-            color: #00ff88;
-            border: 1px solid #00ff8844;
-        }
-
-        .status-empty {
-            background: #ff444422;
-            color: #ff6b6b;
-            border: 1px solid #ff444444;
-        }
-
-        .check-btn {
-            padding: 8px 16px;
-            background: #533483;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: opacity 0.2s;
-        }
-
-        .check-btn:hover {
-            opacity: 0.8;
+        .model-selector select {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            border: 1px solid #00d4ff44;
+            outline: none;
+            font-size: 14px;
         }
 
         .chat-box {
             background: #0f3460;
             border-radius: 12px;
             padding: 20px;
-            min-height: 250px;
-            max-height: 350px;
+            min-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             margin-bottom: 20px;
             border: 1px solid #00d4ff33;
@@ -117,6 +89,7 @@
             padding: 12px 16px;
             border-radius: 12px;
             animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
         }
 
         @keyframes fadeIn {
@@ -190,6 +163,8 @@
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -202,17 +177,6 @@
             color: #ff6b6b;
         }
 
-        .warning {
-            background: #ffaa0033;
-            border: 1px solid #ffaa00;
-            color: #ffaa00;
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
         .info {
             background: #00d4ff22;
             border: 1px solid #00d4ff44;
@@ -223,181 +187,126 @@
             margin-bottom: 15px;
             font-size: 13px;
         }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffaa00;
+        }
+
+        .status-dot.online {
+            background: #00ff88;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 DeepSeek Chat</h1>
-        <p class="subtitle">Чат-бот с проверкой баланса</p>
+        <h1>🤖 OpenRouter Chat</h1>
+        <p class="subtitle">DeepSeek через OpenRouter API</p>
         
-        <div class="warning" id="apiWarning" style="display: none;">
-            ⚠️ Замените API_KEY в коде на свой ключ с platform.deepseek.com
+        <div class="status">
+            <span class="status-dot online" id="statusDot"></span>
+            <span id="statusText">Готов к работе</span>
         </div>
 
-        <div class="balance-info">
-            <div>
-                <div class="balance-label">💰 Баланс</div>
-                <div class="balance-value" id="balanceDisplay">--</div>
-            </div>
-            <div>
-                <div class="balance-label">📊 Статус</div>
-                <span class="status-badge" id="statusBadge">Не проверен</span>
-            </div>
-            <button class="check-btn" onclick="checkBalance()">🔄 Проверить</button>
+        <div class="model-selector">
+            <label>🧠 Модель:</label>
+            <select id="modelSelect">
+                <option value="deepseek/deepseek-chat">DeepSeek V3 (дешевле)</option>
+                <option value="deepseek/deepseek-r1">DeepSeek R1 (умнее)</option>
+            </select>
         </div>
-        
+
         <div class="chat-box" id="chatBox">
             <div class="message bot-message">
-                👋 Привет! Нажмите "Проверить" чтобы узнать баланс API.
+                👋 Привет! Выберите модель и задайте вопрос. Работает через OpenRouter.
             </div>
         </div>
         
         <div class="input-area">
             <textarea 
                 id="userInput" 
-                placeholder="Введите сообщение..." 
+                placeholder="Введите сообщение... (Enter - отправить, Shift+Enter - новая строка)" 
                 rows="2"
                 onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
             ></textarea>
             <button id="sendBtn" onclick="sendMessage()">➤</button>
         </div>
+        
+        <div class="stats">
+            <span id="tokensUsed">Токены: 0</span>
+            <span id="costEstimate">Стоимость: $0.00</span>
+        </div>
     </div>
 
     <script>
-        // ⚠️ ЗАМЕНИТЕ НА СВОЙ КЛЮЧ
-        const API_KEY = "sk-a93f7e9c40e0484fa2446dae50690145";
-        const API_URL = "https://api.deepseek.com/v1/chat/completions";
+        // 🔑 ВАШ КЛЮЧ OPENROUTER (удалите после теста!)
+        const API_KEY = "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";
+        const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
         const chatBox = document.getElementById('chatBox');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
-        const balanceDisplay = document.getElementById('balanceDisplay');
-        const statusBadge = document.getElementById('statusBadge');
-        const apiWarning = document.getElementById('apiWarning');
+        const modelSelect = document.getElementById('modelSelect');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const tokensUsed = document.getElementById('tokensUsed');
+        const costEstimate = document.getElementById('costEstimate');
 
-        // Проверяем, заменён ли ключ
-        if (API_KEY === "sk-a93f7e9c40e0484fa2446dae50690145") {
-            apiWarning.style.display = 'block';
-        }
+        let totalTokens = 0;
+        let totalCost = 0;
 
-        // Автопроверка баланса при загрузке
-        window.onload = () => {
-            if (API_KEY !== "sk-a93f7e9c40e0484fa2446dae50690145") {
-                checkBalance();
-            }
+        // Цены за 1M токенов (примерные)
+        const prices = {
+            'deepseek/deepseek-chat': { input: 0.14, output: 0.28 },
+            'deepseek/deepseek-r1': { input: 0.55, output: 2.19 }
         };
-
-        async function checkBalance() {
-            if (API_KEY === "sk-a93f7e9c40e0484fa2446dae50690145") {
-                addMessage("❌ Сначала замените API_KEY в коде!", 'error');
-                return;
-            }
-
-            balanceDisplay.textContent = '...';
-            statusBadge.textContent = 'Проверка...';
-            statusBadge.className = 'status-badge';
-
-            try {
-                // DeepSeek не имеет прямого эндпоинта баланса,
-                // поэтому делаем тестовый запрос с минимальными токенами
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: "deepseek-chat",
-                        messages: [
-                            { role: "user", content: "тест" }
-                        ],
-                        max_tokens: 1
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    balanceDisplay.textContent = '✅ Активен';
-                    balanceDisplay.style.color = '#00ff88';
-                    statusBadge.textContent = 'Работает';
-                    statusBadge.className = 'status-badge status-active';
-                    
-                    if (data.usage) {
-                        addMessage(`✅ API работает! Использовано токенов: ${data.usage.total_tokens}`, 'info');
-                    }
-                } else {
-                    const errorMsg = data.error?.message || '';
-                    
-                    if (errorMsg.includes('Insufficient') || 
-                        errorMsg.includes('quota') || 
-                        errorMsg.includes('balance') ||
-                        errorMsg.includes('billing') ||
-                        errorMsg.includes('402') ||
-                        response.status === 402) {
-                        
-                        balanceDisplay.textContent = '$0.00';
-                        balanceDisplay.style.color = '#ff6b6b';
-                        statusBadge.textContent = 'Пусто';
-                        statusBadge.className = 'status-badge status-empty';
-                        
-                        addMessage(
-                            '❌ <b>Бесплатные кредиты закончились!</b><br>' +
-                            '• Пополните баланс на <a href="https://platform.deepseek.com" target="_blank" style="color:#00d4ff;">platform.deepseek.com</a><br>' +
-                            '• Или создайте новый аккаунт для получения 10$ кредитов',
-                            'error'
-                        );
-                    } else if (errorMsg.includes('auth') || errorMsg.includes('key') || response.status === 401) {
-                        balanceDisplay.textContent = 'Ошибка';
-                        balanceDisplay.style.color = '#ff6b6b';
-                        statusBadge.textContent = 'Неверный ключ';
-                        statusBadge.className = 'status-badge status-empty';
-                        
-                        addMessage('❌ Неверный API ключ! Проверьте ключ и попробуйте снова.', 'error');
-                    } else {
-                        balanceDisplay.textContent = 'Ошибка';
-                        balanceDisplay.style.color = '#ffaa00';
-                        statusBadge.textContent = 'Ошибка';
-                        statusBadge.className = 'status-badge';
-                        
-                        addMessage(`⚠️ Ошибка: ${errorMsg || 'Неизвестная ошибка'}`, 'error');
-                    }
-                }
-            } catch (error) {
-                balanceDisplay.textContent = 'Ошибка';
-                balanceDisplay.style.color = '#ff6b6b';
-                statusBadge.textContent = 'Нет связи';
-                statusBadge.className = 'status-badge status-empty';
-                
-                addMessage(`❌ Ошибка соединения: ${error.message}`, 'error');
-            }
-        }
 
         async function sendMessage() {
             const message = userInput.value.trim();
             
             if (!message) return;
-            
-            if (API_KEY === "sk-ваш-ключ-здесь") {
-                addMessage("❌ Сначала замените API_KEY в коде!", 'error');
-                return;
-            }
 
             addMessage(message, 'user');
             userInput.value = '';
             
             sendBtn.disabled = true;
-            const loadingMsg = addMessage('<span class="loading"></span> Думаю...', 'bot', true);
+            statusDot.className = 'status-dot';
+            statusText.textContent = 'Думаю...';
+            
+            const loadingMsg = addMessage('<span class="loading"></span> Генерация ответа...', 'bot', true);
             
             try {
+                const model = modelSelect.value;
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'OpenRouter Test'
                     },
                     body: JSON.stringify({
-                        model: "deepseek-chat",
+                        model: model,
                         messages: [
                             { role: "user", content: message }
                         ],
@@ -410,23 +319,43 @@
                 loadingMsg.remove();
                 
                 if (response.ok && data.choices) {
-                    addMessage(data.choices[0].message.content, 'bot');
-                } else if (response.status === 402 || 
-                          (data.error?.message && 
-                           (data.error.message.includes('Insufficient') || 
-                            data.error.message.includes('quota') || 
-                            data.error.message.includes('balance')))) {
-                    addMessage('❌ Бесплатные кредиты закончились! Пополните баланс на platform.deepseek.com', 'error');
-                    balanceDisplay.textContent = '$0.00';
-                    balanceDisplay.style.color = '#ff6b6b';
-                    statusBadge.textContent = 'Пусто';
-                    statusBadge.className = 'status-badge status-empty';
+                    const reply = data.choices[0].message.content;
+                    addMessage(reply, 'bot');
+                    
+                    // Обновляем статистику
+                    if (data.usage) {
+                        totalTokens += data.usage.total_tokens;
+                        tokensUsed.textContent = `Токены: ${totalTokens}`;
+                        
+                        // Примерный расчёт стоимости
+                        const modelPrice = prices[model] || prices['deepseek/deepseek-chat'];
+                        const inputCost = (data.usage.prompt_tokens / 1000000) * modelPrice.input;
+                        const outputCost = (data.usage.completion_tokens / 1000000) * modelPrice.output;
+                        totalCost += inputCost + outputCost;
+                        costEstimate.textContent = `Стоимость: $${totalCost.toFixed(6)}`;
+                    }
+                    
+                    statusDot.className = 'status-dot online';
+                    statusText.textContent = 'Готов';
+                } else if (response.status === 402) {
+                    addMessage('❌ Недостаточно кредитов на OpenRouter. Пополните баланс.', 'error');
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Нет кредитов';
+                } else if (response.status === 401) {
+                    addMessage('❌ Неверный API ключ OpenRouter.', 'error');
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Ошибка ключа';
                 } else {
-                    addMessage(`❌ Ошибка: ${data.error?.message || 'Неизвестная ошибка'}`, 'error');
+                    const errorMsg = data.error?.message || 'Неизвестная ошибка';
+                    addMessage(`❌ Ошибка: ${errorMsg}`, 'error');
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Ошибка';
                 }
             } catch (error) {
                 loadingMsg.remove();
-                addMessage(`❌ Ошибка: ${error.message}`, 'error');
+                addMessage(`❌ Ошибка соединения: ${error.message}`, 'error');
+                statusDot.className = 'status-dot';
+                statusText.textContent = 'Нет связи';
             } finally {
                 sendBtn.disabled = false;
                 userInput.focus();
